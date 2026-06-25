@@ -81,9 +81,6 @@ std::string get_build_type() {
   return android::base::GetProperty("ro.build.type", "");
 }
 
-static constexpr const char* adb_keys_data = "/data/misc/adb/adb_keys";
-static constexpr const char* adb_keys_root = "/adb_keys";
-
 static void UiLogger(android::base::LogId log_buffer_id, android::base::LogSeverity severity,
                      const char* tag, const char* file, unsigned int line, const char* message) {
   android::base::KernelLogger(log_buffer_id, severity, tag, file, line, message);
@@ -201,19 +198,7 @@ static std::string load_locale_from_cache() {
 }
 
 static void copy_userdata_files() {
-  android::base::SetLogger(android::base::StdioLogger);
-  if (ensure_path_mounted("/data") == 0) {
-    if (access(adb_keys_root, F_OK) != 0) {
-      if (access(adb_keys_data, R_OK) == 0) {
-        std::error_code ec;  // to invoke the overloaded copy_file() that won't throw.
-        if (!fs::copy_file(adb_keys_data, adb_keys_root, ec)) {
-          PLOG(ERROR) << "Failed to copy adb keys";
-        }
-      }
-    }
-    ensure_path_unmounted("/data");
-  }
-  android::base::SetLogger(UiLogger);
+  // Do not mount /data in recovery
 }
 
 // Sets the usb config to 'state'.
