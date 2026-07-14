@@ -591,10 +591,13 @@ void ScreenRecoveryUI::SetColor(UIElement e) const {
         gr_color(0xc7, 0x15, 0x85, 255);
       break;
     case UIElement::INFO:
-        gr_color(0x42, 0x85, 0xf4, 255);
+      gr_color(0xfd, 0xd8, 0x35, 255);
       break;
     case UIElement::HEADER:
-        gr_color(0x42, 0x85, 0xf4, 255);
+      if (fastbootd_logo_enabled_)
+        gr_color(0xfd, 0xd8, 0x35, 255);
+      else
+        gr_color(0xfd, 0xd8, 0x35, 255);
       break;
     case UIElement::MENU:
       gr_color(0xd8, 0xd8, 0xd8, 255);
@@ -607,19 +610,22 @@ void ScreenRecoveryUI::SetColor(UIElement e) const {
       break;
     case UIElement::MENU_SEL_BG:
     case UIElement::SCROLLBAR:
-        gr_color(0x42, 0x85, 0xf4, 255);
+      if (fastbootd_logo_enabled_)
+        gr_color(68, 192, 225, 255);
+      else
+        gr_color(68, 192, 225, 255);
       break;
     case UIElement::MENU_SEL_BG_ACTIVE:
-      gr_color(0, 156, 100, 255);
+      gr_color(164, 185, 228, 255);
       break;
     case UIElement::MENU_SEL_FG:
-        gr_color(0xd8, 0xd8, 0xd8, 255);
+      gr_color(0, 0, 0, 255);
       break;
     case UIElement::LOG:
       gr_color(196, 196, 196, 255);
       break;
     case UIElement::TEXT_FILL:
-      gr_color(0, 0, 0, 160);
+      gr_color(255, 255, 255, 255);
       break;
     default:
       gr_color(255, 255, 255, 255);
@@ -830,7 +836,7 @@ void ScreenRecoveryUI::draw_menu_and_text_buffer_locked(
   int y = margin_height_;
 
   if (menu_) {
-    auto& logo = fastbootd_logo_enabled_ ? fastbootd_logo_ : default_logo;
+    auto& logo = fastbootd_logo_enabled_ ? fastbootd_logo_ : ascp_logo_;
     auto logo_width = gr_get_width(logo.get());
     auto logo_height = gr_get_height(logo.get());
     auto centered_x = ScreenWidth() / 2 - logo_width / 2;
@@ -879,7 +885,7 @@ void ScreenRecoveryUI::draw_menu_and_text_buffer_locked(
 // Draws the battery capacity on the screen. Should only be called with updateMutex locked.
 void ScreenRecoveryUI::draw_battery_capacity_locked() {
   int x;
-  int y = margin_height_ + gr_get_height(lineage_logo_.get());
+  int y = margin_height_ + gr_get_height(ascp_logo_.get());
   int icon_x, icon_y, icon_h, icon_w;
 
   if (is_battery_less) return;
@@ -1187,12 +1193,14 @@ bool ScreenRecoveryUI::Init(const std::string& locale) {
   no_command_text_ = LoadLocalizedBitmap("no_command_text");
   error_text_ = LoadLocalizedBitmap("error_text");
 
-  default_logo = LoadBitmap("logo_image");
   back_icon_ = LoadBitmap("ic_back");
   back_icon_sel_ = LoadBitmap("ic_back_sel");
   if (android::base::GetBoolProperty("ro.boot.dynamic_partitions", false) ||
       android::base::GetBoolProperty("ro.fastbootd.available", true)) {
+    ascp_logo_ = LoadBitmap("logo_image_switch");    
     fastbootd_logo_ = LoadBitmap("fastbootd");
+  } else {
+    ascp_logo_ = LoadBitmap("logo_image");
   }
 
   // Background text for "installing_update" could be "installing update" or
@@ -1527,8 +1535,8 @@ int ScreenRecoveryUI::SelectMenu(const Point& p) {
   if (menu_) {
     if (!menu_->IsMain()) {
       // Back arrow hitbox
-      const static int logo_width = gr_get_width(default_logo.get());
-      const static int logo_height = gr_get_height(default_logo.get());
+      const static int logo_width = gr_get_width(ascp_logo_.get());
+      const static int logo_height = gr_get_height(ascp_logo_.get());
       const static int icon_w = gr_get_width(back_icon_.get());
       const static int icon_h = gr_get_height(back_icon_.get());
       const static int centered_x = ScreenWidth() / 2 - logo_width / 2;
